@@ -1,5 +1,5 @@
---extra-index-url https://download.pytorch.org/whl/cu102
-torch==1.12.1+cu102
+--extra-index-url https://download.pytorch.org/whl/cu113
+torch==1.12.1+cu113
 datasets
 transformers
 
