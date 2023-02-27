@@ -1,0 +1,15 @@
+--extra-index-url https://download.pytorch.org/whl/cu102
+torch==1.12.1+cu102
+datasets
+transformers
+
+numpy
+scipy
+pandas
+scikit-learn
+
+nltk
+absl-py
+bert-score
+rouge-score
+tqdm

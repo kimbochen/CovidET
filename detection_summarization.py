@@ -23,13 +23,13 @@ from tqdm import tqdm
 FLAGS = flags.FLAGS
 flags.DEFINE_string("emotion", "anger", "Emotion type")
 flags.DEFINE_string("training_path",
-                    "data/train_val_test/train_anonymized_post.json",
+                    "data/train_val_test/train_anonymized-WITH_POSTS.json",
                     "Path to training json")
 flags.DEFINE_string("validation_path",
-                    "data/train_val_test/val_anonymized_post.json",
+                    "data/train_val_test/val_anonymized-WITH_POSTS.json",
                     "Path to validation json")
 flags.DEFINE_string("test_path",
-                    "data/train_val_test/test_anonymized_post.json",
+                    "data/train_val_test/test_anonymized-WITH_POSTS.json",
                     "Path to test json")
 flags.DEFINE_string("model", "facebook/bart-large-cnn",
                     "Model name from HuggingFace")
@@ -38,6 +38,10 @@ flags.DEFINE_string("results_detection_summarization",
 flags.DEFINE_integer("batch_size", 2, "")
 flags.DEFINE_integer("gradient_accumulation_steps", 8, "")
 flags.DEFINE_float("learning_rate", 0.00005, "")
+
+
+flags.DEFINE_integer('epochs', 10, "Number of epochs")
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 rouge_metric = load_metric("rouge")
@@ -272,10 +276,10 @@ def load_split_to_dataset(filepath, emotion):
                     summ.append(hit['Abstractive'])
 
         if emo == 0:
-            negative_posts.append(dataset[k]['Post'])
+            negative_posts.append(dataset[k]['Reddit Post'])
         else:
             for i in range(len(summ)):
-                positive_posts.append(dataset[k]['Post'])
+                positive_posts.append(dataset[k]['Reddit Post'])
                 summarizations.append(summ[i])
 
     return positive_posts, negative_posts, summarizations
@@ -299,9 +303,9 @@ def load_test_split_to_dataset(filepath, emotion):
                     emo = 1
                     summ.append(hit['Abstractive'])
         if emo == 0:
-            negative_posts.append(dataset[k]['Post'])
+            negative_posts.append(dataset[k]['Reddit Post'])
         else:
-            positive_posts.append(dataset[k]['Post'])
+            positive_posts.append(dataset[k]['Reddit Post'])
             summarizations.append(summ)
 
     return positive_posts, negative_posts, summarizations
@@ -618,7 +622,7 @@ def main(argv):
     full_eval(model, test_dataloader_positives, test_dataloader_negatives,
               df_test_positive, dev_dataloader_positives,
               dev_dataloader_negatives, df_validation_positive, results, 0)
-    for epoch in range(10):
+    for epoch in range(FLAGS.epochs):
         ctr = 1
         for data_positive, data_negative in tqdm(
                 zip(train_dataloader_positives, train_dataloader_negatives)):
@@ -656,6 +660,8 @@ def main(argv):
                   df_test_positive, dev_dataloader_positives,
                   dev_dataloader_negatives, df_validation_positive, results,
                   epoch + 1)
+
+    model.save_pretrained(f'ckpt_{FLAGS.emotion}', from_pt=True)
 
 
 if __name__ == "__main__":
